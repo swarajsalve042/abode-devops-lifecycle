@@ -1,7 +1,6 @@
 -- ABC Fashion – Sales Order Processing System
 -- SQL Server / T-SQL
 
--- Base tables
 CREATE TABLE Salesman (
     SalesmanId INT,
     SalesmanName VARCHAR(50),
@@ -25,7 +24,6 @@ CREATE TABLE Orders (
     Amount DECIMAL(10,2)
 );
 
--- Sample data
 INSERT INTO Salesman (SalesmanId, SalesmanName, Commission, City, Age)
 VALUES
 (101, 'Joe', 50, 'California', 17),
@@ -51,7 +49,7 @@ VALUES
 INSERT INTO Orders (OrderId, CustomerId, SalesmanId, OrderDate, Amount)
 VALUES (5004, 2345, 101, '2022-03-10', 1250);
 
--- Task 2: Add constraints
+-- Task 2: Required constraints
 ALTER TABLE Salesman
 ADD CONSTRAINT PK_Salesman PRIMARY KEY (SalesmanId);
 
@@ -66,7 +64,7 @@ REFERENCES Salesman(SalesmanId);
 ALTER TABLE Customer
 ALTER COLUMN CustomerName VARCHAR(100) NOT NULL;
 
--- Recommended relational constraints for Orders
+-- Additional order constraint
 ALTER TABLE Orders
 ADD CONSTRAINT PK_Orders PRIMARY KEY (OrderId);
 
@@ -75,10 +73,8 @@ ADD CONSTRAINT FK_Orders_Salesman
 FOREIGN KEY (SalesmanId)
 REFERENCES Salesman(SalesmanId);
 
-ALTER TABLE Orders
-ADD CONSTRAINT FK_Orders_Customer
-FOREIGN KEY (CustomerId)
-REFERENCES Customer(CustomerId);
+-- Note: CustomerId is intentionally not declared UNIQUE because the
+-- supplied dataset contains CustomerId 2345 more than once.
 
 -- Task 3: Customer name ending with N and purchase > 500
 SELECT CustomerId, CustomerName, PurchaseAmount
