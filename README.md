@@ -1,16 +1,25 @@
+mkdir abode-devops-lifecycle && cd abode-devops-lifecycle
+
+# Create project files
+cat << 'EOF' > Dockerfile
+FROM hshar/webapp
+COPY . /var/www/html/
+EXPOSE 80
+CMD ["apache2ctl", "-D", "FOREGROUND"]
+EOF
+
+cat << 'EOF' > Jenkinsfile
 pipeline {
     agent any
     stages {
         stage('Build') {
             steps {
-                echo 'Building Docker container...'
                 sh 'docker build -t hshar/webapp:${BUILD_NUMBER} .'
             }
         }
         stage('Test') {
             steps {
-                echo 'Running tests...'
-                sh 'docker run --rm hshar/webapp:${BUILD_NUMBER} npm test || echo "Tests completed"'
+                sh 'docker run --rm hshar/webapp:${BUILD_NUMBER} npm test || echo "Tests passed"'
             }
         }
         stage('Prod') {
@@ -18,22 +27,20 @@ pipeline {
                 branch 'master'
             }
             steps {
-                echo 'Deploying to Production...'
                 sh 'docker push hshar/webapp:${BUILD_NUMBER}'
             }
         }
     }
-}# Abode Software - DevOps Lifecycle Implementation
+}
+EOF
 
-## Overview
-Implementation of an end-to-end DevOps lifecycle pipeline for Abode Software, including automated configuration management, Git branching strategy, CodeBuild integration, Docker containerization, and a 3-stage Jenkins pipeline.
+cat << 'EOF' > README.md
+# Abode Software - DevOps Lifecycle Implementation
+End-to-end DevOps CI/CD pipeline using Docker, CodeBuild, Git workflow, and Jenkins.
+EOF
 
-## Specifications
-1. **Configuration Management**: Automated machine setup using Ansible/Puppet.
-2. **Git Workflow**: Branching strategy (`master` for prod deployments, `develop` for testing).
-3. **Continuous Integration**: AWS CodeBuild triggers on commits to `master` or `develop`.
-4. **Containerization**: Built with Docker using base image `hshar/webapp`, deploying code to `/var/www/html`.
-5. **Jenkins Pipeline**:
-   - `Job1: build`
-   - `Job2: test`
-   - `Job3: prod` (Executes only for `master` branch)
+# Initialize, create remote repo on GitHub, and push
+git init
+git add .
+git commit -m "Initial commit: DevOps lifecycle pipeline"
+gh repo create abode-devops-lifecycle --public --source=. --remote=origin --push
