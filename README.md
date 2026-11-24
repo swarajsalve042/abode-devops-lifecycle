@@ -1,46 +1,31 @@
 # Abode Software DevOps CI/CD Lifecycle
 
-Professional DevOps implementation project based on the Abode Software assignment.
+A reproducible sample implementation of the DevOps lifecycle assignment. The original assignment strategy PDF is retained. Because the repository did not contain the source for the referenced external `hshar/webapp` image, this repository now includes a small independent Node.js demonstration application.
 
-## Architecture
+## Application
+- Home page: `/`
+- Health endpoint: `/health`
+- Runtime: Node.js 20
+- Container port: 3000
+- Automated tests: Node.js built-in test runner
 
-GitHub → Jenkins → AWS CodeBuild → Docker → Test → Production
+## CI/CD flow
 
-## Branch Strategy
+GitHub → Jenkins or GitHub Actions → automated tests → Docker build → container health check
 
-- **master**: build → test → production deployment
-- **develop**: build → test only; no production deployment
+The GitHub Actions workflow performs the Node.js tests, builds the Docker image, starts a temporary container, checks its health endpoint, and removes it.
 
-## Jenkins Jobs
-
-1. **Job1 - Build** — checkout source and build the Docker image.
-2. **Job2 - Test** — run automated/application validation.
-3. **Job3 - Prod** — deploy only when the source branch is **master**.
-
-## Docker
-
-Pre-built application container: `hshar/webapp`
-
-Application location: `/var/www/html`
-
-The Docker image is rebuilt whenever source code is pushed to GitHub.
+## Jenkins
+The Jenkinsfile checks out the repository, installs dependencies, runs tests, and builds a local Docker image. It does not deploy to production. A real Jenkins controller and agent are required to verify actual Jenkins execution.
 
 ## AWS CodeBuild
+`buildspec.yml` describes the test and Docker build phases. A CodeBuild project must be configured separately. Docker builds in CodeBuild require privileged mode. No CodeBuild project or AWS resource has been created by this repository change.
 
-`buildspec.yml` provides the CodeBuild build configuration. Configure the CodeBuild webhook/source trigger for pushes to the **master** and **develop** branches.
+## Branch strategy
+Use `main` for the current GitHub Actions workflow. A separate `develop` branch and production promotion policy can be added when the target environment is defined. No production deployment is claimed.
 
-## Configuration Management
-
-Use a configuration-management tool such as Ansible to install and standardize Docker, Jenkins agents, Git, AWS tooling and other required dependencies on target machines.
-
-## Deliverables
-
-- `Dockerfile`
-- `Jenkinsfile`
-- `buildspec.yml`
-- DevOps Lifecycle Implementation Strategy PDF
-- Professional project presentation
+## Verification boundaries
+See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md). No AWS resources are launched; this project is designed for free GitHub-hosted CI checks.
 
 ## Repository
-
 https://github.com/swarajsalve042/abode-devops-lifecycle
