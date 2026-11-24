@@ -1,0 +1,11 @@
+{
+  "name": "abode-devops-lifecycle-demo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sample web application for the Abode DevOps lifecycle assignment",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" }
+}
