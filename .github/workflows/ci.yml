@@ -1,0 +1,39 @@
+name: Abode CI and Docker Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test-and-container:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run tests
+        run: npm test
+      - name: Build Docker image
+        run: docker build -t abode-devops-demo:ci .
+      - name: Run container and check health
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run -d --name abode-demo-ci -p 3000:3000 abode-devops-demo:ci
+          cleanup() { docker logs abode-demo-ci || true; docker rm -f abode-demo-ci || true; }
+          trap cleanup EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3000/health; then
+              echo
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Container health check failed"
+          exit 1
