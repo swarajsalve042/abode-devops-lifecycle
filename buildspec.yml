@@ -1,17 +1,27 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - node --version
+      - npm install
   pre_build:
     commands:
-      - echo "Preparing Abode Software build"
+      - echo "Running automated tests"
+      - npm test
       - docker --version
-
   build:
     commands:
-      - echo "Building Docker image"
-      - docker build -t hshar/webapp:$CODEBUILD_RESOLVED_SOURCE_VERSION .
-
+      - echo "Building the Abode sample application image"
+      - docker build -t abode-devops-demo:$CODEBUILD_RESOLVED_SOURCE_VERSION .
   post_build:
     commands:
-      - echo "Build completed"
-      - echo "Branch-aware deployment logic is handled by the CI/CD pipeline"
+      - echo "Build and test phase completed. No deployment was performed."
+
+artifacts:
+  files:
+    - '**/*'
+  exclude-paths:
+    - node_modules/**/*
