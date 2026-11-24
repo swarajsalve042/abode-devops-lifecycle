@@ -1,33 +1,32 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = 'abode-devops-demo'
+    }
+
     stages {
-        stage('Job1 - Build') {
+        stage('Checkout') {
+            steps { checkout scm }
+        }
+
+        stage('Install and Test') {
             steps {
-                checkout scm
-                sh 'docker build -t hshar/webapp:$BUILD_NUMBER .'
+                sh 'node --version'
+                sh 'npm install'
+                sh 'npm test'
             }
         }
 
-        stage('Job2 - Test') {
+        stage('Build Docker Image') {
             steps {
-                sh 'echo "Run application tests here"'
-                sh 'docker run --rm hshar/webapp:$BUILD_NUMBER true'
-            }
-        }
-
-        stage('Job3 - Prod') {
-            when {
-                branch 'master'
-            }
-            steps {
-                sh 'echo "Deploy tested image to production here"'
+                sh 'docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} .'
             }
         }
     }
 
     post {
-        success { echo 'Build/Test pipeline completed successfully.' }
-        failure { echo 'Pipeline failed. Production promotion is blocked.' }
+        success { echo 'Build, automated tests and local Docker image build completed.' }
+        failure { echo 'Pipeline failed. Review the stage logs; no deployment was attempted.' }
     }
 }
