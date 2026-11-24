@@ -17,6 +17,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Install Groovy
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes groovy
+      - name: Parse Jenkinsfile as Groovy
+        run: groovy -e "new GroovyShell().parse(new File('Jenkinsfile')); println 'Jenkinsfile Groovy syntax: PASS'"
       - name: Run tests
         run: npm test
       - name: Build Docker image
