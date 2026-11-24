@@ -15,6 +15,12 @@ GitHub → Jenkins or GitHub Actions → automated tests → Docker build → co
 
 The GitHub Actions workflow performs the Node.js tests, builds the Docker image, starts a temporary container, checks its health endpoint, and removes it.
 
+## Verified GitHub Actions evidence
+
+[Latest successful CI and Docker validation](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45356279393): Node.js tests passed, the Docker image built, and a temporary container passed its `/health` check.
+
+This validates the independent sample app, not the original external `hshar/webapp` image. It is not evidence of a production deployment or a live Jenkins run.
+
 ## Jenkins
 The Jenkinsfile checks out the repository, installs dependencies, runs tests, and builds a local Docker image. It does not deploy to production. A real Jenkins controller and agent are required to verify actual Jenkins execution.
 
