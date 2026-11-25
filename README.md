@@ -21,6 +21,10 @@ The GitHub Actions workflow parses the Jenkinsfile as Groovy, performs the Node.
 
 This validates the independent sample app, not the original external `hshar/webapp` image. It is not evidence of a production deployment or a live Jenkins run.
 
+## SQL portfolio assignments
+
+The repository also includes three SQL Server/T-SQL assignments: ABC Fashion sales-order processing, relational design with users/roles/statuses, and Zomato restaurant analytics. Their scripts are executed in a temporary SQL Server Developer container with fictional test records by the [SQL Server Portfolio Project Validation workflow](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45573290565). The run verifies all three scripts complete successfully. The ABC Fashion fixture was corrected so every customer SalesmanId has a matching salesman and primary-key columns are explicitly NOT NULL.
+
 ## Jenkins
 The Jenkinsfile checks out the repository, installs dependencies, runs tests, and builds a local Docker image. It does not deploy to production. A real Jenkins controller and agent are required to verify actual Jenkins execution.
 
