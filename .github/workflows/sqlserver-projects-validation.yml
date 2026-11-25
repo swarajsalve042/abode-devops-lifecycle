@@ -1,0 +1,144 @@
+name: SQL Server Portfolio Project Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'abc-fashion-sales-order/**'
+      - 'sql-server-relational-design/**'
+      - 'zomato-sql-data-analytics/**'
+      - '.github/workflows/sqlserver-projects-validation.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'abc-fashion-sales-order/**'
+      - 'sql-server-relational-design/**'
+      - 'zomato-sql-data-analytics/**'
+      - '.github/workflows/sqlserver-projects-validation.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  execute-sql-projects:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Start temporary SQL Server Developer container
+        shell: bash
+        run: |
+          set -euo pipefail
+          SA_PASSWORD="TestOnly!$(openssl rand -hex 16)aA9"
+          echo "::add-mask::$SA_PASSWORD"
+          echo "SA_PASSWORD=$SA_PASSWORD" >> "$GITHUB_ENV"
+          docker pull mcr.microsoft.com/mssql/server:2022-latest
+          docker run -d --name abode-sqlserver \
+            -e ACCEPT_EULA=Y \
+            -e MSSQL_PID=Developer \
+            -e MSSQL_SA_PASSWORD="$SA_PASSWORD" \
+            -p 1433:1433 \
+            mcr.microsoft.com/mssql/server:2022-latest
+          for attempt in $(seq 1 60); do
+            if docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+              -S localhost -U sa -P "$SA_PASSWORD" -C -b -Q "SELECT 1" >/dev/null 2>&1; then
+              echo "SQL Server is ready."
+              exit 0
+            fi
+            sleep 5
+          done
+          docker logs abode-sqlserver
+          exit 1
+
+      - name: Execute ABC Fashion sales-order project
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$SA_PASSWORD" -C -b -Q "CREATE DATABASE AbodeValidation;"
+          docker cp abc-fashion-sales-order/abc_fashion_sales_order.sql \
+            abode-sqlserver:/tmp/abc_fashion_sales_order.sql
+          docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$SA_PASSWORD" -C -b -V 16 \
+            -d AbodeValidation -i /tmp/abc_fashion_sales_order.sql \
+            > "$RUNNER_TEMP/abc-fashion-results.txt" 2>&1
+          cat "$RUNNER_TEMP/abc-fashion-results.txt"
+          docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$SA_PASSWORD" -C -b -d AbodeValidation \
+            -Q "SELECT COUNT(*) AS SalesmanCount FROM dbo.Salesman;
+                SELECT COUNT(*) AS CustomerCount FROM dbo.Customer;
+                SELECT COUNT(*) AS OrderCount FROM dbo.Orders;
+                SELECT COUNT(*) AS OrphanCustomers
+                FROM dbo.Customer c LEFT JOIN dbo.Salesman s
+                  ON s.SalesmanId = c.SalesmanId
+                WHERE s.SalesmanId IS NULL;"
+          echo "ABC Fashion SQL execution passed."
+
+      - name: Execute relational-design project
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker cp sql-server-relational-design/relational_design.sql \
+            abode-sqlserver:/tmp/relational_design.sql
+          docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$SA_PASSWORD" -C -b -V 16 \
+            -d master -i /tmp/relational_design.sql \
+            > "$RUNNER_TEMP/relational-design-results.txt" 2>&1
+          cat "$RUNNER_TEMP/relational-design-results.txt"
+          echo "Relational design SQL execution passed."
+
+      - name: Create fictional Zomato fixture and execute analytics project
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$SA_PASSWORD" -C -b -d AbodeValidation \
+            -Q "CREATE TABLE dbo.Zomato (
+                  restaurant_name NVARCHAR(150) NOT NULL,
+                  restaurant_type NVARCHAR(80) NULL,
+                  cuisines NVARCHAR(150) NULL,
+                  table_booking NVARCHAR(10) NULL,
+                  area NVARCHAR(100) NULL,
+                  rating DECIMAL(4,2) NULL
+                );
+                INSERT INTO dbo.Zomato
+                  (restaurant_name, restaurant_type, cuisines, table_booking, area, rating)
+                VALUES
+                  ('CI Fictional Cafe', 'Cafe', 'Cafe', 'No', 'North', 4.2),
+                  ('CI Fictional Diner', 'Casual Dining', 'Indian', 'Yes', 'South', 3.8),
+                  ('CI Fictional Grill', 'Quick Bites', 'Chicken', 'No', 'North', 4.6),
+                  ('CI Fictional Bistro', 'Cafe', 'Cafe', '0', 'West', 3.4),
+                  ('CI Fictional Kitchen', 'Casual Dining', 'Indian', NULL, 'East', 4.0);"
+          docker cp zomato-sql-data-analytics/zomato_sql_project.sql \
+            abode-sqlserver:/tmp/zomato_sql_project.sql
+          docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$SA_PASSWORD" -C -b -V 16 \
+            -d AbodeValidation -i /tmp/zomato_sql_project.sql \
+            > "$RUNNER_TEMP/zomato-tsql-results.txt" 2>&1
+          cat "$RUNNER_TEMP/zomato-tsql-results.txt"
+          docker exec abode-sqlserver /opt/mssql-tools18/bin/sqlcmd \
+            -S localhost -U sa -P "$SA_PASSWORD" -C -b -d AbodeValidation \
+            -Q "SELECT COUNT(*) AS ZomatoFixtureRows FROM dbo.Zomato;
+                SELECT COUNT(*) AS TopFiveViewRows FROM dbo.vw_Top5RatedRestaurants;
+                SELECT COUNT(*) AS InsertTriggerCount
+                FROM sys.triggers WHERE name = N'trg_Zomato_Insert';"
+          echo "Zomato T-SQL project execution passed."
+
+      - name: Upload SQL execution results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abode-sql-project-results
+          path: |
+            ${{ runner.temp }}/abc-fashion-results.txt
+            ${{ runner.temp }}/relational-design-results.txt
+            ${{ runner.temp }}/zomato-tsql-results.txt
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Stop and remove temporary SQL Server
+        if: always()
+        run: docker rm -f abode-sqlserver || true
