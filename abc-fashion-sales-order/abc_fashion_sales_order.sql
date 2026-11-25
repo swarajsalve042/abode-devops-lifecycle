@@ -2,7 +2,7 @@
 -- SQL Server / T-SQL
 
 CREATE TABLE Salesman (
-    SalesmanId INT,
+    SalesmanId INT NOT NULL,
     SalesmanName VARCHAR(50),
     Commission INT,
     City VARCHAR(50),
@@ -17,7 +17,7 @@ CREATE TABLE Customer (
 );
 
 CREATE TABLE Orders (
-    OrderId INT,
+    OrderId INT NOT NULL,
     CustomerId INT,
     SalesmanId INT,
     OrderDate DATE,
