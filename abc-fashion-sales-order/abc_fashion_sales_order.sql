@@ -30,7 +30,9 @@ VALUES
 (102, 'Simon', 75, 'Texas', 25),
 (103, 'Jessie', 105, 'Florida', 35),
 (104, 'Danny', 100, 'Texas', 22),
-(105, 'Lia', 65, 'New Jersy', 30);
+(105, 'Lia', 65, 'New Jersy', 30),
+(107, 'Remona Salesman', 55, 'Nevada', 28),
+(110, 'Julia Salesman', 60, 'Oregon', 31);
 
 INSERT INTO Customer (SalesmanId, CustomerId, CustomerName, PurchaseAmount)
 VALUES
