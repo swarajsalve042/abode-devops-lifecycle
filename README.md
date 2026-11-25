@@ -17,7 +17,7 @@ The GitHub Actions workflow parses the Jenkinsfile as Groovy, performs the Node.
 
 ## Verified GitHub Actions evidence
 
-[Latest successful CI, Jenkinsfile syntax and Docker validation](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45362757999): Jenkinsfile Groovy syntax passed, Node.js tests passed, the Docker image built, and a temporary container passed its `/health` check.
+[Latest successful CI, Jenkinsfile syntax and Docker validation](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45573501207): Jenkinsfile Groovy syntax passed, Node.js tests passed, the Docker image built, and a temporary container passed its `/health` check.
 
 This validates the independent sample app, not the original external `hshar/webapp` image. It is not evidence of a production deployment or a live Jenkins run.
 
