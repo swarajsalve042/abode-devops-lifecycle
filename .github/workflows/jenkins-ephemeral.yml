@@ -43,6 +43,7 @@ jobs:
           mkdir -p /tmp/jenkins-init
           cat > /tmp/jenkins-init/create-job.groovy <<'EOF'
           import jenkins.model.Jenkins
+          import jenkins.model.JenkinsLocationConfiguration
           import hudson.security.AuthorizationStrategy
           import hudson.security.SecurityRealm
           import hudson.plugins.git.GitSCM
@@ -64,7 +65,8 @@ jobs:
           definition.setLightweight(false)
           job.setDefinition(definition)
           job.save()
-          j.setRootUrl("http://127.0.0.1:8080/")
+          JenkinsLocationConfiguration.get().setUrl("http://127.0.0.1:8080/")
+          JenkinsLocationConfiguration.get().save()
           j.save()
           println("Configured repository-pipeline for swarajsalve042/abode-devops-lifecycle")
           EOF
