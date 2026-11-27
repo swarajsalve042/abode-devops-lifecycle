@@ -64,6 +64,7 @@ jobs:
           definition.setLightweight(false)
           job.setDefinition(definition)
           job.save()
+          j.setRootUrl("http://127.0.0.1:8080/")
           j.save()
           println("Configured repository-pipeline for swarajsalve042/abode-devops-lifecycle")
           EOF
