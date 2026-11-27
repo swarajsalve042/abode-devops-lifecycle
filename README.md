@@ -20,7 +20,7 @@ The GitHub Actions workflow parses the Jenkinsfile as Groovy, performs the Node.
 
 ## Verified GitHub Actions evidence
 
-[Latest successful CI, Jenkinsfile syntax and Docker validation](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45573501207): Jenkinsfile Groovy syntax passed, Node.js tests passed, the Docker image built, and a temporary container passed its `/health` check.
+[Latest successful CI, Jenkinsfile syntax and Docker validation](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45950934625): Jenkinsfile Groovy syntax passed, Node.js tests passed, the Docker image built, and a temporary container passed its `/health` check.
 
 This validates the independent sample app, not the original external `hshar/webapp` image. It is not evidence of a production deployment or a live Jenkins run.
 
@@ -44,9 +44,9 @@ See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md). No AWS resources are launched;
 https://github.com/swarajsalve042/abode-devops-lifecycle
 
 
-## Latest automated verification (25 November 2026)
+## Latest automated verification (27 November 2026)
 
-- [Application CI, Docker and Jenkinsfile validation — successful GitHub Actions run](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45575084114)
-- [SQL portfolio validation — successful GitHub Actions run](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45573290565)
+- [Application CI, Docker and Jenkinsfile validation — successful GitHub Actions run #17](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45950934625)
+- [SQL portfolio validation — successful GitHub Actions run #2](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45573290565)
 
 These links document automated checks only; they do not imply production deployment or manual end-user acceptance testing.
