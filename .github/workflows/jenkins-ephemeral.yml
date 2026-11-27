@@ -112,8 +112,13 @@ jobs:
             result="$(printf '%s' "$build_json" | jq -r '.result // "RUNNING"')"
             echo "Jenkins build #$build: $result (building=$building)"
             if [ "$building" = "false" ]; then
-              test "$result" = "SUCCESS"
-              exit $?
+              if [ "$result" != "SUCCESS" ]; then
+                echo "----- Jenkins console output -----"
+                curl --globoff -fsS "$base/job/repository-pipeline/$build/consoleText" || true
+                exit 1
+              fi
+              echo "Jenkins pipeline completed successfully."
+              exit 0
             fi
             sleep 5
           done
