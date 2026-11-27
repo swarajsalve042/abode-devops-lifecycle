@@ -27,12 +27,11 @@ jobs:
           FROM jenkins/jenkins:lts-jdk21
           USER root
           RUN apt-get update \
-              && apt-get install -y --no-install-recommends docker.io curl ca-certificates gnupg \
+              && apt-get install -y --no-install-recommends curl ca-certificates gnupg \
               && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
               && apt-get install -y --no-install-recommends nodejs \
               && node --version \
               && npm --version \
-              && docker --version \
               && rm -rf /var/lib/apt/lists/*
           RUN jenkins-plugin-cli --plugins workflow-aggregator git
           EOF
@@ -75,6 +74,8 @@ jobs:
             -v /tmp/jenkins-init:/usr/share/jenkins/ref/init.groovy.d:ro \
             -e JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \
             temporary-jenkins:ci
+          docker cp "$(command -v docker)" temporary-jenkins:/usr/local/bin/docker
+          docker exec temporary-jenkins docker --version
 
           for attempt in $(seq 1 90); do
             if curl -fsS http://127.0.0.1:8080/login >/dev/null; then
@@ -94,7 +95,7 @@ jobs:
       - name: Show Jenkins diagnostics on failure
         if: failure()
         shell: bash
-        run: docker logs temporary-jenkins 2>&1 | tail -n 200
+        run: docker logs temporary-jenkins 2>&1 | tail -n 200 || true
 
       - name: Stop temporary Jenkins
         if: always()
