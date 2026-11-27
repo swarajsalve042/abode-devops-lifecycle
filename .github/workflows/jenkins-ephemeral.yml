@@ -68,7 +68,8 @@ jobs:
           JenkinsLocationConfiguration.get().setUrl("http://127.0.0.1:8080/")
           JenkinsLocationConfiguration.get().save()
           j.save()
-          println("Configured repository-pipeline for swarajsalve042/abode-devops-lifecycle")
+          job.scheduleBuild2(0)
+          println("Scheduled repository-pipeline build for for swarajsalve042/abode-devops-lifecycle")
           EOF
 
           docker run -d --name temporary-jenkins --user root \
@@ -94,20 +95,11 @@ jobs:
         run: |
           set -euo pipefail
           base="http://127.0.0.1:8080"
-          initial="$(curl --globoff -fsS "$base/api/json?tree=jobs[name,lastBuild[number]]" | jq -r '.jobs[] | select(.name=="repository-pipeline") | .lastBuild.number // 0')"
-          crumb_json="$(curl --globoff -fsS "$base/crumbIssuer/api/json" || true)"
-          if [ -n "$crumb_json" ]; then
-            crumb_field="$(printf '%s' "$crumb_json" | jq -r '.crumbRequestField')"
-            crumb_value="$(printf '%s' "$crumb_json" | jq -r '.crumb')"
-            curl -fsS -X POST -H "$crumb_field: $crumb_value" "$base/job/repository-pipeline/build"
-          else
-            curl -fsS -X POST "$base/job/repository-pipeline/build"
-          fi
           build=""
           for attempt in $(seq 1 90); do
             build_json="$(curl --globoff -fsS "$base/job/repository-pipeline/lastBuild/api/json?tree=number,building,result" || true)"
             number="$(printf '%s' "$build_json" | jq -r '.number // 0')"
-            if [ "$number" -gt "$initial" ]; then
+            if [ "$number" -gt 0 ]; then
               build="$number"
               break
             fi
