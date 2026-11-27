@@ -22,14 +22,14 @@ The GitHub Actions workflow parses the Jenkinsfile as Groovy, performs the Node.
 
 [Latest successful CI, Jenkinsfile syntax and Docker validation](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45950934625): Jenkinsfile Groovy syntax passed, Node.js tests passed, the Docker image built, and a temporary container passed its `/health` check.
 
-This validates the independent sample app, not the original external `hshar/webapp` image. It is not evidence of a production deployment or a live Jenkins run.
+This validates the independent sample app, not the original external `hshar/webapp` image. A temporary Jenkins controller also executed the repository Jenkinsfile successfully in [ephemeral Jenkins verification](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45956944981). This is not evidence of a production deployment or a persistent Jenkins service.
 
 ## SQL portfolio assignments
 
 The repository also includes three SQL Server/T-SQL assignments: ABC Fashion sales-order processing, relational design with users/roles/statuses, and Zomato restaurant analytics. Their scripts are executed in a temporary SQL Server Developer container with fictional test records by the [SQL Server Portfolio Project Validation workflow](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45573290565). The run verifies all three scripts complete successfully. The ABC Fashion fixture was corrected so every customer SalesmanId has a matching salesman and primary-key columns are explicitly NOT NULL.
 
 ## Jenkins
-The Jenkinsfile checks out the repository, installs dependencies, runs tests, and builds a local Docker image. It does not deploy to production. A real Jenkins controller and agent are required to verify actual Jenkins execution.
+The Jenkinsfile checks out the repository, installs dependencies, runs tests, and builds a local Docker image. It does not deploy to production. A temporary Jenkins controller and Docker-capable agent successfully executed this Jenkinsfile in GitHub Actions. A persistent, separately hosted Jenkins service is not part of this repository and is not claimed.
 
 ## AWS CodeBuild
 `buildspec.yml` describes the test and Docker build phases. A CodeBuild project must be configured separately. Docker builds in CodeBuild require privileged mode. No CodeBuild project or AWS resource has been created by this repository change.
