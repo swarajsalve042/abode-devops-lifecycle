@@ -94,11 +94,11 @@ jobs:
         run: |
           set -euo pipefail
           base="http://127.0.0.1:8080"
-          initial="$(curl -fsS "$base/api/json?tree=jobs[name,lastBuild[number]]" | jq -r '.jobs[] | select(.name=="repository-pipeline") | .lastBuild.number // 0')"
+          initial="$(curl --globoff -fsS "$base/api/json?tree=jobs[name,lastBuild[number]]" | jq -r '.jobs[] | select(.name=="repository-pipeline") | .lastBuild.number // 0')"
           curl -fsS -X POST "$base/job/repository-pipeline/build"
           build=""
           for attempt in $(seq 1 90); do
-            build_json="$(curl -fsS "$base/job/repository-pipeline/lastBuild/api/json?tree=number,building,result" || true)"
+            build_json="$(curl --globoff -fsS "$base/job/repository-pipeline/lastBuild/api/json?tree=number,building,result" || true)"
             number="$(printf '%s' "$build_json" | jq -r '.number // 0')"
             if [ "$number" -gt "$initial" ]; then
               build="$number"
@@ -108,7 +108,7 @@ jobs:
           done
           test -n "$build" || { echo "Jenkins did not schedule a build"; exit 1; }
           for attempt in $(seq 1 180); do
-            build_json="$(curl -fsS "$base/job/repository-pipeline/$build/api/json?tree=number,building,result")"
+            build_json="$(curl --globoff -fsS "$base/job/repository-pipeline/$build/api/json?tree=number,building,result")"
             building="$(printf '%s' "$build_json" | jq -r '.building')"
             result="$(printf '%s' "$build_json" | jq -r '.result // "RUNNING"')"
             echo "Jenkins build #$build: $result (building=$building)"
