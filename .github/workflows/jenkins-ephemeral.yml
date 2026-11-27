@@ -33,7 +33,7 @@ jobs:
               && node --version \
               && npm --version \
               && rm -rf /var/lib/apt/lists/*
-          RUN jenkins-plugin-cli --plugins workflow-aggregator git
+          RUN jenkins-plugin-cli --plugins workflow-aggregator git timestamper
           EOF
           docker build -f /tmp/Dockerfile.jenkins -t temporary-jenkins:ci .
 
