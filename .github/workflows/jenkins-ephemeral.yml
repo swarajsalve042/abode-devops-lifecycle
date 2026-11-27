@@ -1,0 +1,102 @@
+name: Ephemeral Jenkins Pipeline Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Jenkinsfile"
+      - ".github/workflows/jenkins-ephemeral.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  jenkins:
+    name: Run Jenkinsfile in temporary Jenkins
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Build temporary Jenkins image
+        shell: bash
+        run: |
+          cat > /tmp/Dockerfile.jenkins <<'EOF'
+          FROM jenkins/jenkins:lts-jdk21
+          USER root
+          RUN apt-get update \\
+              && apt-get install -y --no-install-recommends docker.io curl ca-certificates gnupg \\
+              && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \\
+              && apt-get install -y --no-install-recommends nodejs \\
+              && node --version \\
+              && npm --version \\
+              && docker --version \\
+              && rm -rf /var/lib/apt/lists/*
+          RUN jenkins-plugin-cli --plugins workflow-aggregator git
+          EOF
+          docker build -f /tmp/Dockerfile.jenkins -t temporary-jenkins:ci .
+
+      - name: Configure isolated Jenkins job
+        shell: bash
+        run: |
+          mkdir -p /tmp/jenkins-init
+          cat > /tmp/jenkins-init/create-job.groovy <<'EOF'
+          import jenkins.model.Jenkins
+          import hudson.security.AuthorizationStrategy
+          import hudson.security.SecurityRealm
+          import hudson.plugins.git.GitSCM
+          import hudson.plugins.git.BranchSpec
+          import org.jenkinsci.plugins.workflow.job.WorkflowJob
+          import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
+
+          def j = Jenkins.get()
+          j.setSecurityRealm(SecurityRealm.NO_AUTHENTICATION)
+          j.setAuthorizationStrategy(AuthorizationStrategy.UNSECURED)
+
+          def job = j.getItem("repository-pipeline")
+          if (job == null) {
+              job = j.createProject(WorkflowJob, "repository-pipeline")
+          }
+          def scm = new GitSCM("https://github.com/swarajsalve042/abode-devops-lifecycle.git")
+          scm.branches = [new BranchSpec("*/main")]
+          def definition = new CpsScmFlowDefinition(scm, "Jenkinsfile")
+          definition.setLightweight(false)
+          job.setDefinition(definition)
+          job.save()
+          j.save()
+          println("Configured repository-pipeline for swarajsalve042/abode-devops-lifecycle")
+          EOF
+
+          docker run -d --name temporary-jenkins --user root \\
+            -p 127.0.0.1:8080:8080 \\
+            -v /var/run/docker.sock:/var/run/docker.sock \\
+            -v /tmp/jenkins-init:/usr/share/jenkins/ref/init.groovy.d:ro \\
+            -e JAVA_OPTS="-Djenkins.install.runSetupWizard=false" \\
+            temporary-jenkins:ci
+
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1:8080/login >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS http://127.0.0.1:8080/login >/dev/null
+          docker logs temporary-jenkins 2>&1 | tail -n 80
+
+      - name: Execute and verify Jenkins pipeline
+        shell: bash
+        run: |
+          curl -fsS http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -o /tmp/jenkins-cli.jar
+          java -jar /tmp/jenkins-cli.jar -s http://127.0.0.1:8080/ build repository-pipeline -s -v
+
+      - name: Show Jenkins diagnostics on failure
+        if: failure()
+        shell: bash
+        run: docker logs temporary-jenkins 2>&1 | tail -n 200
+
+      - name: Stop temporary Jenkins
+        if: always()
+        shell: bash
+        run: docker rm -f temporary-jenkins || true
