@@ -1,5 +1,8 @@
 # Abode Software DevOps CI/CD Lifecycle
 
+[![ci](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/workflows/ci.yml/badge.svg)](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/workflows/ci.yml)
+[![sqlserver projects validation](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/workflows/sqlserver-projects-validation.yml/badge.svg)](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/workflows/sqlserver-projects-validation.yml)
+
 A reproducible sample implementation of the DevOps lifecycle assignment. The original assignment strategy PDF is retained. Because the repository did not contain the source for the referenced external `hshar/webapp` image, this repository now includes a small independent Node.js demonstration application.
 
 ## Application
@@ -39,3 +42,11 @@ See [DEPLOYMENT_STATUS.md](DEPLOYMENT_STATUS.md). No AWS resources are launched;
 
 ## Repository
 https://github.com/swarajsalve042/abode-devops-lifecycle
+
+
+## Latest automated verification (25 November 2026)
+
+- [Application CI, Docker and Jenkinsfile validation — successful GitHub Actions run](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45575084114)
+- [SQL portfolio validation — successful GitHub Actions run](https://github.com/swarajsalve042/abode-devops-lifecycle/actions/runs/45573290565)
+
+These links document automated checks only; they do not imply production deployment or manual end-user acceptance testing.
