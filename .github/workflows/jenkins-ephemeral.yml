@@ -92,8 +92,34 @@ jobs:
       - name: Execute and verify Jenkins pipeline
         shell: bash
         run: |
-          curl -fsS http://127.0.0.1:8080/jnlpJars/jenkins-cli.jar -o /tmp/jenkins-cli.jar
-          java -jar /tmp/jenkins-cli.jar -s http://127.0.0.1:8080/ build repository-pipeline -s -v
+          set -euo pipefail
+          base="http://127.0.0.1:8080"
+          initial="$(curl -fsS "$base/api/json?tree=jobs[name,lastBuild[number]]" | jq -r '.jobs[] | select(.name=="repository-pipeline") | .lastBuild.number // 0')"
+          curl -fsS -X POST "$base/job/repository-pipeline/build"
+          build=""
+          for attempt in $(seq 1 90); do
+            build_json="$(curl -fsS "$base/job/repository-pipeline/lastBuild/api/json?tree=number,building,result" || true)"
+            number="$(printf '%s' "$build_json" | jq -r '.number // 0')"
+            if [ "$number" -gt "$initial" ]; then
+              build="$number"
+              break
+            fi
+            sleep 2
+          done
+          test -n "$build" || { echo "Jenkins did not schedule a build"; exit 1; }
+          for attempt in $(seq 1 180); do
+            build_json="$(curl -fsS "$base/job/repository-pipeline/$build/api/json?tree=number,building,result")"
+            building="$(printf '%s' "$build_json" | jq -r '.building')"
+            result="$(printf '%s' "$build_json" | jq -r '.result // "RUNNING"')"
+            echo "Jenkins build #$build: $result (building=$building)"
+            if [ "$building" = "false" ]; then
+              test "$result" = "SUCCESS"
+              exit $?
+            fi
+            sleep 5
+          done
+          echo "Jenkins build timed out"
+          exit 1
 
       - name: Show Jenkins diagnostics on failure
         if: failure()
